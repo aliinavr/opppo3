@@ -208,6 +208,46 @@ public:
 class ConditionParser
 {
 private:
+
+    static bool compareTextField(
+        const Film& film,
+        const string& field,
+        const string& value)
+    {
+        if (field == "type")
+        {
+            return film.getType() == value;
+        }
+
+        if (field == "director")
+        {
+            return film.getDirector() == value;
+        }
+
+        if (field == "method")
+        {
+            return film.getCreationMethod() == value;
+        }
+
+        if (field == "title")
+        {
+            string expectedTitle = value;
+
+            if (expectedTitle.size() >= 2 &&
+                expectedTitle.front() == '"' &&
+                expectedTitle.back() == '"')
+            {
+                expectedTitle = expectedTitle.substr(
+                    1, expectedTitle.size() - 2
+                );
+            }
+
+            return film.getTitle() == expectedTitle;
+        }
+
+        return false;
+    }
+
     static string trim(const string& value)
     {
         size_t first = value.find_first_not_of(' ');
@@ -310,31 +350,9 @@ public:
             return false;
         }
 
-        if (field == "type" && op == "==")
+        if (op == "==" && field != "episodes")
         {
-            return film.getType() == value;
-        }
-
-        if (field == "title" && op == "==")
-        {
-            if (value.size() >= 2 &&
-                value.front() == '"' &&
-                value.back() == '"')
-            {
-                value = value.substr(1, value.size() - 2);
-            }
-
-            return film.getTitle() == value;
-        }
-
-        if (field == "director" && op == "==")
-        {
-            return film.getDirector() == value;
-        }
-
-        if (field == "method" && op == "==")
-        {
-            return film.getCreationMethod() == value;
+            return compareTextField(film, field, value);
         }
 
         if (field == "episodes")
