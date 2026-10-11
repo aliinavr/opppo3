@@ -1,4 +1,5 @@
-﻿#include <iostream>
+﻿
+#include <iostream>
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -48,17 +49,17 @@ CreationMethod stringToCreationMethod(string value)
 
     if (value == "PUPPET")
     {
-        return CreationMethod::DRAWN;
+        return CreationMethod::PUPPET;
     }
 
     if (value == "CLAY")
     {
-        return CreationMethod::DRAWN;
+        return CreationMethod::CLAY;
     }
 
-    if(value == "COMPUTER")
+    if (value == "COMPUTER")
     {
-        return CreationMethod::DRAWN;
+        return CreationMethod::COMPUTER;
     }
 
     return CreationMethod::OTHER;
@@ -204,6 +205,171 @@ public:
     }
 };
 
+class ConditionParser
+{
+private:
+    static string trim(const string& value)
+    {
+        size_t first = value.find_first_not_of(' ');
+
+        if (first == string::npos)
+        {
+            return "";
+        }
+
+        size_t last = value.find_last_not_of(' ');
+
+        return value.substr(first, last - first + 1);
+    }
+
+    static bool compareEpisodes(
+        int episodes,
+        const string& op,
+        int value)
+    {
+        if (episodes == -1)
+        {
+            return false;
+        }
+
+        if (op == ">=")
+        {
+            return episodes >= value;
+        }
+
+        if (op == "<=")
+        {
+            return episodes <= value;
+        }
+
+        if (op == "==")
+        {
+            return episodes == value;
+        }
+
+        if (op == ">")
+        {
+            return episodes > value;
+        }
+
+        if (op == "<")
+        {
+            return episodes < value;
+        }
+
+        return false;
+    }
+
+public:
+    static bool matches(
+        const Film& film,
+        const string& condition)
+    {
+        size_t position = condition.find(' ');
+
+        if (position == string::npos)
+        {
+            return false;
+        }
+
+        string field = condition.substr(0, position);
+
+        string rest = trim(condition.substr(position + 1));
+
+        string op;
+
+        if (rest.rfind(">=", 0) == 0)
+        {
+            op = ">=";
+        }
+        else if (rest.rfind("<=", 0) == 0)
+        {
+            op = "<=";
+        }
+        else if (rest.rfind("==", 0) == 0)
+        {
+            op = "==";
+        }
+        else if (rest.rfind(">", 0) == 0)
+        {
+            op = ">";
+        }
+        else if (rest.rfind("<", 0) == 0)
+        {
+            op = "<";
+        }
+        else
+        {
+            return false;
+        }
+
+        string value = trim(rest.substr(op.size()));
+
+        if (value.empty())
+        {
+            return false;
+        }
+
+        if (field == "type" && op == "==")
+        {
+            return film.getType() == value;
+        }
+
+        if (field == "title" && op == "==")
+        {
+            if (value.size() >= 2 &&
+                value.front() == '"' &&
+                value.back() == '"')
+            {
+                value = value.substr(1, value.size() - 2);
+            }
+
+            return film.getTitle() == value;
+        }
+
+        if (field == "director" && op == "==")
+        {
+            return film.getDirector() == value;
+        }
+
+        if (field == "method" && op == "==")
+        {
+            return film.getCreationMethod() == value;
+        }
+
+        if (field == "episodes")
+        {
+            try
+            {
+                size_t parsed = 0;
+
+                int number = stoi(value, &parsed);
+
+                if (parsed != value.size())
+                {
+                    return false;
+                }
+
+                return compareEpisodes(
+                    film.getEpisodes(),
+                    op,
+                    number
+                );
+            }
+            catch (const invalid_argument&)
+            {
+                return false;
+            }
+            catch (const out_of_range&)
+            {
+                return false;
+            }
+        }
+
+        return false;
+    }
+};
+
 class FilmContainer
 {
 private:
@@ -242,150 +408,21 @@ public:
             remove_if(
                 films.begin(),
                 films.end(),
-
                 [&](const unique_ptr<Film>& film)
                 {
-                    if (condition.find("type ==") == 0)
-                    {
-                        string value =
-                            condition.substr(7);
-
-                        while (!value.empty() &&
-                            value.front() == ' ')
-                        {
-                            value.erase(value.begin());
-                        }
-
-                        return film->getType() == value;
-                    }
-
-                    if (condition.find("title ==") == 0)
-                    {
-                        string value =
-                            condition.substr(8);
-
-                        while (!value.empty() &&
-                            value.front() == ' ')
-                        {
-                            value.erase(value.begin());
-                        }
-
-                        if (!value.empty() &&
-                            value.front() == '"')
-                        {
-                            value.erase(value.begin());
-                        }
-
-                        if (!value.empty() &&
-                            value.back() == '"')
-                        {
-                            value.pop_back();
-                        }
-
-                        return film->getTitle() == value;
-                    }
-
-                    if (condition.find("director ==") == 0)
-                    {
-                        string value =
-                            condition.substr(11);
-
-                        while (!value.empty() &&
-                            value.front() == ' ')
-                        {
-                            value.erase(value.begin());
-                        }
-
-                        return film->getDirector() == value;
-                    }
-
-                    if (condition.find("method ==") == 0)
-                    {
-                        string value =
-                            condition.substr(9);
-
-                        while (!value.empty() &&
-                            value.front() == ' ')
-                        {
-                            value.erase(value.begin());
-                        }
-
-                        return film->getCreationMethod() == value;
-                    }
-
-                    if (condition.find("episodes >=") == 0)
-                    {
-                        int value =
-                            stoi(condition.substr(11));
-
-                        int episodes =
-                            film->getEpisodes();
-
-                        return episodes != -1 &&
-                            episodes >= value;
-                    }
-
-                    if (condition.find("episodes <=") == 0)
-                    {
-                        int value =
-                            stoi(condition.substr(11));
-
-                        int episodes =
-                            film->getEpisodes();
-
-                        return episodes != -1 &&
-                            episodes <= value;
-                    }
-
-                    if (condition.find("episodes ==") == 0)
-                    {
-                        int value =
-                            stoi(condition.substr(11));
-
-                        int episodes =
-                            film->getEpisodes();
-
-                        return episodes != -1 &&
-                            episodes == value;
-                    }
-
-                    if (condition.find("episodes >") == 0)
-                    {
-                        int value =
-                            stoi(condition.substr(10));
-
-                        int episodes =
-                            film->getEpisodes();
-
-                        return episodes != -1 &&
-                            episodes > value;
-                    }
-
-                    if (condition.find("episodes <") == 0)
-                    {
-                        int value =
-                            stoi(condition.substr(10));
-
-                        int episodes =
-                            film->getEpisodes();
-
-                        return episodes != -1 &&
-                            episodes < value;
-                    }
-
-                    return false;
+                    return ConditionParser::matches(
+                        *film,
+                        condition
+                    );
                 }
             ),
-
             films.end()
         );
 
-        size_t removedCount =
-            oldSize - films.size();
+        size_t removedCount = oldSize - films.size();
 
         cout << "Удалено объектов: "
-            << removedCount
-            << endl;
+            << removedCount << endl;
     }
 };
 
