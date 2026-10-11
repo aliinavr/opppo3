@@ -3,6 +3,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <exception>
 #include <vector>
 #include <memory>
 #include <algorithm>
@@ -262,9 +263,10 @@ private:
         return value.substr(first, last - first + 1);
     }
 
+
     static bool compareEpisodes(
         int episodes,
-        const string& op,
+        const string& comparisonOperator,
         int value)
     {
         if (episodes == -1)
@@ -272,33 +274,34 @@ private:
             return false;
         }
 
-        if (op == ">=")
+        if (comparisonOperator == ">=")
         {
             return episodes >= value;
         }
 
-        if (op == "<=")
+        if (comparisonOperator == "<=")
         {
             return episodes <= value;
         }
 
-        if (op == "==")
+        if (comparisonOperator == "==")
         {
             return episodes == value;
         }
 
-        if (op == ">")
+        if (comparisonOperator == ">")
         {
             return episodes > value;
         }
 
-        if (op == "<")
+        if (comparisonOperator == "<")
         {
             return episodes < value;
         }
 
         return false;
     }
+
 
 public:
     static bool matches(
@@ -641,7 +644,17 @@ int main()
     SetConsoleCP(CP_UTF8);
     SetConsoleOutputCP(CP_UTF8);
 
-    processFile("commands.txt");
+    try
+    {
+        processFile("commands.txt");
+    }
+    catch (const std::exception& error)
+    {
+        cerr << "Ошибка выполнения: "
+            << error.what() << endl;
+
+        return 1;
+    }
 
     return 0;
 }
