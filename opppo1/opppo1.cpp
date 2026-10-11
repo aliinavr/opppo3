@@ -442,6 +442,7 @@ vector<string> split(const string& line, char delimiter)
     return parts;
 }
 
+
 class FilmFactory
 {
 public:
@@ -489,18 +490,38 @@ public:
                 return nullptr;
             }
 
-            int episodes = stoi(parts[3]);
+            try
+            {
+                size_t parsed = 0;
 
-            return make_unique<Series>(
-                parts[1],
-                parts[2],
-                episodes
-            );
+                int episodes = stoi(parts[3], &parsed);
+
+                if (parsed != parts[3].size() ||
+                    episodes <= 0)
+                {
+                    return nullptr;
+                }
+
+                return make_unique<Series>(
+                    parts[1],
+                    parts[2],
+                    episodes
+                );
+            }
+            catch (const invalid_argument&)
+            {
+                return nullptr;
+            }
+            catch (const out_of_range&)
+            {
+                return nullptr;
+            }
         }
 
         return nullptr;
     }
 };
+
 
 
 
