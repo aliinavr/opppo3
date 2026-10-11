@@ -1,0 +1,15 @@
+ADD FEATURE;Интерстеллар;Кристофер Нолан
+ADD CARTOON;Коралина;PUPPET
+ADD CARTOON;Коралина;CLAY
+ADD SERIES;Шерлок;Пол Макгиган;13
+ADD SERIES;Чернобыль;Йохан Ренк;5
+
+PRINT
+
+REM episodes > 10
+
+PRINT
+
+REM title == "Коралина"
+
+PRINT
