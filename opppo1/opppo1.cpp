@@ -442,98 +442,93 @@ vector<string> split(const string& line, char delimiter)
     return parts;
 }
 
+class FilmFactory
+{
+public:
+    static unique_ptr<Film> create(
+        const vector<string>& parts)
+    {
+        if (parts.empty())
+        {
+            return nullptr;
+        }
+
+        if (parts[0] == "FEATURE")
+        {
+            if (parts.size() != 3)
+            {
+                return nullptr;
+            }
+
+            return make_unique<FeatureFilm>(
+                parts[1],
+                parts[2]
+            );
+        }
+
+        if (parts[0] == "CARTOON")
+        {
+            if (parts.size() != 3)
+            {
+                return nullptr;
+            }
+
+            CreationMethod method =
+                stringToCreationMethod(parts[2]);
+
+            return make_unique<Cartoon>(
+                parts[1],
+                method
+            );
+        }
+
+        if (parts[0] == "SERIES")
+        {
+            if (parts.size() != 4)
+            {
+                return nullptr;
+            }
+
+            int episodes = stoi(parts[3]);
+
+            return make_unique<Series>(
+                parts[1],
+                parts[2],
+                episodes
+            );
+        }
+
+        return nullptr;
+    }
+};
+
+
+
 void processAdd(
     const string& data,
     FilmContainer& container)
 {
-    vector<string> parts =
-        split(data, ';');
+    vector<string> parts = split(data, ';');
 
-    if (parts.empty())
+    unique_ptr<Film> film =
+        FilmFactory::create(parts);
+
+    if (!film)
     {
-        cout << "Ошибка команды ADD." << endl;
+        cout << "Ошибка параметров ADD." << endl;
         return;
     }
 
-    if (parts[0] == "FEATURE")
-    {
-        if (parts.size() != 3)
-        {
-            cout << "Ошибка параметров FEATURE."
-                << endl;
+    string type = film->getType();
+    string title = film->getTitle();
 
-            return;
-        }
+    container.add(std::move(film));
 
-        container.add(
-            make_unique<FeatureFilm>(
-                parts[1],
-                parts[2]
-            )
-        );
-
-        cout << "Добавлен игровой фильм: "
-            << parts[1]
-            << endl;
-    }
-
-    else if (parts[0] == "CARTOON")
-    {
-        if (parts.size() != 3)
-        {
-            cout << "Ошибка параметров CARTOON."
-                << endl;
-
-            return;
-        }
-
-        CreationMethod method =
-            stringToCreationMethod(parts[2]);
-
-        container.add(
-            make_unique<Cartoon>(
-                parts[1],
-                method
-            )
-        );
-
-        cout << "Добавлен мультфильм: "
-            << parts[1]
-            << endl;
-    }
-
-    else if (parts[0] == "SERIES")
-    {
-        if (parts.size() != 4)
-        {
-            cout << "Ошибка параметров SERIES."
-                << endl;
-
-            return;
-        }
-
-        int episodes =
-            stoi(parts[3]);
-
-        container.add(
-            make_unique<Series>(
-                parts[1],
-                parts[2],
-                episodes
-            )
-        );
-
-        cout << "Добавлен сериал: "
-            << parts[1]
-            << endl;
-    }
-
-    else
-    {
-        cout << "Неизвестный тип фильма."
-            << endl;
-    }
+    cout << "Добавлен объект: "
+        << type << " - "
+        << title << endl;
 }
+
 
 void processFile(const string& fileName)
 {
