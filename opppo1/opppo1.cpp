@@ -42,16 +42,24 @@ string creationMethodToString(CreationMethod method)
 CreationMethod stringToCreationMethod(string value)
 {
     if (value == "DRAWN")
+    {
         return CreationMethod::DRAWN;
+    }
 
     if (value == "PUPPET")
-        return CreationMethod::PUPPET;
+    {
+        return CreationMethod::DRAWN;
+    }
 
     if (value == "CLAY")
-        return CreationMethod::CLAY;
+    {
+        return CreationMethod::DRAWN;
+    }
 
-    if (value == "COMPUTER")
-        return CreationMethod::COMPUTER;
+    if(value == "COMPUTER")
+    {
+        return CreationMethod::DRAWN;
+    }
 
     return CreationMethod::OTHER;
 }
@@ -204,7 +212,7 @@ private:
 public:
     void add(unique_ptr<Film> film)
     {
-        films.push_back(move(film));
+        films.push_back(std::move(film));
     }
 
     void print() const
@@ -385,11 +393,11 @@ vector<string> split(const string& line, char delimiter)
 {
     vector<string> parts;
 
-    stringstream ss(line);
+    stringstream stream(line);
 
     string item;
 
-    while (getline(ss, item, delimiter))
+    while (getline(stream, item, delimiter))
     {
         parts.push_back(item);
     }
